@@ -54,6 +54,13 @@ An interactive generator for creating custom Reverse Shell payloads (connect-bac
   - **Smart Encoding**: If the IP/Port introduces NULL bytes, it automatically applies a mini-XOR obfuscation routine to the mov instructions to ensure the final payload remains NULL-free.
 - **Usage**: Run interactively `python3 IPHEXGen.py`
 
+#### `Egghunter-Gen.py` — Buffer Space Stager (New!) - need to test
+A utility to generate an "Egghunter" stub for small buffer exploits.
+- **Concept**: When check buffer is too small for the full payload, you inject a small "Hunter" that scans memory for a specific "Egg" (signature) marking the start of your main payload.
+- **Technique**: Uses `access(2)` syscall to safely scan memory pages without crashing.
+- **Egg**: Default tag is `PABA` (prepended as `PABAPABA` to the main payload).
+- **Usage**: `python3 Egghunter-Gen.py` (Outputs the hunter shellcode).
+
 ### 2. Encryption and Obfuscation (`XOR.py`, `XOR-C.py`)
 Scripts that transform "clean" shellcode into an encrypted format to bypass static signature detection.
 
@@ -64,7 +71,7 @@ Generates an XOR-encrypted payload with a classic stack-based decoder stub.
 - **Output**: Logs the result to `XOR.txt` for easy tracking.
 - **Best for**: Usage in exploits where stack execution is permitted or for learning classic techniques.
 
-#### `XOR-MMX.py` — Advanced MMX Obfuscator (New!)
+#### `XOR-MMX.py` — Advanced MMX Obfuscator (New!) - need to test
 A highly advanced generator for evading modern EDRs and static analysis.
 - **Anti-Debugging**: Includes a `ptrace` check to detect if the shellcode is being debugged.
 - **MMX Encryption**: Uses 64-bit MMX registers (`mm0`-`mm7`) for XOR operations instead of standard general-purpose registers.
@@ -91,7 +98,7 @@ A Python script to execute raw hex shellcode directly in memory without compilat
 - **Usage**: `python3 loader.py <HEX_STRING>`
 - **Note**: Useful for verifying that your XOR decoder stub works correctly before embedding it into an exploit.
 
-#### `Loader-Indirect.c` — Stealthy C Loader (New!)
+#### `Loader-Indirect.c` — Stealthy C Loader (New!) - need to test
 A compiled C loader that uses **Indirect Syscalls** to bypass EDR hooks.
 - **Concept**: Instead of calling `mmap` directly (which EDRs hook), it finds a `syscall` gadget in `libc` and jumps to it.
 - **Stealth**: Hides the origin of the system call, making memory allocation look like it came from a legitimate library.
@@ -100,6 +107,35 @@ A compiled C loader that uses **Indirect Syscalls** to bypass EDR hooks.
   2. Run: `./Loader-Indirect <HEX_PAYLOAD>`
 
 *(Note: Requires Linux environment/headers to compile)*
+
+---
+
+## ⚡ Advanced Usage: Evasion & Low-Level Tactics
+
+This toolkit goes beyond simple encoding. For complex environments with active EDR/AV monitoring, use these advanced modules:
+
+### 1. 🧬 Polymorphic Egghunter (Stage-0)
+When your exploit buffer is too small for a full payload, use the **Egghunter**. It is a tiny (35-byte) robust memory scanner that finds your actual shellcode elsewhere in the process memory by searching for a unique 8-byte "egg" (e.g., `PABAPABA`).
+* **Usage**: `python3 Egghunter-Gen.py`
+* **Tech**: Uses `sys_access` memory page traversal to avoid segmentation faults.
+
+### 2. 💎 MMX Multimedia Encryption
+Standard XOR loops are easily flagged by heuristic emulators. **XOR-MMX.py** utilizes 64-bit MMX registers (`mm0-mm7`) to perform decryption.
+* **Benefit**: Most static analyzers do not emulate MMX instructions, allowing the payload to remain "invisible" during the initial scan.
+* **Anti-Debugging**: Automatically embeds a `ptrace` trap. If run under a debugger, execution terminates immediately.
+
+### 3. 🛡️ Indirect Syscalls (EDR Bypass)
+Modern EDRs hook standard library functions like `mmap` and `mprotect`. **Loader-Indirect.c** bypasses these hooks by:
+1. Scanning `libc` for a `syscall` gadget.
+2. Executing the system call indirectly via a `call` to that gadget.
+This makes the system call appear to originate from a legitimate signed library rather than your shellcode's memory segment.
+
+### 🛠 Quick Start: The "Ghost" Workflow
+1. **Generate** your reverse shell: `python3 IPHEXGen.py`
+2. **Encapsulate** with MMX: `python3 XOR-MMX.py` (Add the Egg tag `PABAPABA` manually if needed).
+3. **Generate** the hunter: `python3 Egghunter-Gen.py`
+4. **Deploy**: Inject the 35-byte Egghunter into the vulnerable buffer.
+5. **Execute** via `Loader-Indirect.c` for maximum stealth during testing.
 
 ---
 
@@ -141,6 +177,14 @@ gcc -fno-stack-protector -z execstack test_payload.c -o test_exploit
 *Note: Ensure you have a listener running (e.g., `nc -lvnp 4444`) if testing a reverse shell.*
 
 ---
+
+## ⚠️ Ethical Usage & Disclaimer
+
+This toolkit is developed solely for **educational and research purposes**. It demonstrates modern techniques used in malware analysis, shellcode development, and red team engagements.
+
+*   **Do not use this code on systems you do not own or have explicit permission to test.**
+*   **The authors are not responsible for any misuse of this toolkit.**
+*   The goal is to demystify how EDR evasion works so defenders can build better detections.
 
 ## ⚠️ Technical Notes
 - **Polymorphism**: The "Junk Code" added by the encoders ensures the entry point bytes are different every time, which helps evade simple signature matching.
