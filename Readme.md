@@ -64,6 +64,13 @@ Generates an XOR-encrypted payload with a classic stack-based decoder stub.
 - **Output**: Logs the result to `XOR.txt` for easy tracking.
 - **Best for**: Usage in exploits where stack execution is permitted or for learning classic techniques.
 
+#### `XOR-MMX.py` — Advanced MMX Obfuscator (New!)
+A highly advanced generator for evading modern EDRs and static analysis.
+- **Anti-Debugging**: Includes a `ptrace` check to detect if the shellcode is being debugged.
+- **MMX Encryption**: Uses 64-bit MMX registers (`mm0`-`mm7`) for XOR operations instead of standard general-purpose registers.
+- **Alignment**: Automatically pads shellcode to 8-byte boundaries.
+- **Usage**: `python3 XOR-MMX.py` (Selects hex and description interactively).
+
 #### `XOR-C.py` — RIP-Relative Encoder (Modern)
 A modernized version of the encoder using 64-bit addressing.
 - **Technique**: Uses **RIP-Relative Addressing (LEA)** to locate the encrypted data, which is position-independent and does not rely on stack manipulation tricks.
@@ -72,7 +79,7 @@ A modernized version of the encoder using 64-bit addressing.
   - Copies the payload and executes it.
 - **Best for**: Creating standalone Proof-of-Concept (PoC) executables to test AV/EDR evasion.
 
-### 3. Execution and Analysis (`loader.py`)
+### 3. Execution and Analysis (`loader.py`, `Loader-Indirect.c`)
 Tools for safely running and verifying shellcode.
 
 #### `loader.py` — In-Memory Loader
@@ -83,6 +90,16 @@ A Python script to execute raw hex shellcode directly in memory without compilat
   - Transfers control flow to the shellcode.
 - **Usage**: `python3 loader.py <HEX_STRING>`
 - **Note**: Useful for verifying that your XOR decoder stub works correctly before embedding it into an exploit.
+
+#### `Loader-Indirect.c` — Stealthy C Loader (New!)
+A compiled C loader that uses **Indirect Syscalls** to bypass EDR hooks.
+- **Concept**: Instead of calling `mmap` directly (which EDRs hook), it finds a `syscall` gadget in `libc` and jumps to it.
+- **Stealth**: Hides the origin of the system call, making memory allocation look like it came from a legitimate library.
+- **Usage**:
+  1. Compile: `gcc -o Loader-Indirect Loader-Indirect.c -ldl`
+  2. Run: `./Loader-Indirect <HEX_PAYLOAD>`
+
+*(Note: Requires Linux environment/headers to compile)*
 
 ---
 
