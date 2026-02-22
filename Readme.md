@@ -34,7 +34,7 @@ Security systems (AV/EDR) scan for known byte sequences (signatures).
 
 ## 📂 Project Structure & Tools
 
-### 1. Payload Generators (`shellcoder.py`, `IPHEXGen.py`)
+### 1. Payload Generators (`shellcoder.py`, `ReverseShellGen.py`)
 Tools designed to generate raw shellcode bytes from various sources.
 
 #### `shellcoder.py` — ELF to Shellcode Extractor
@@ -46,15 +46,22 @@ A utility that extracts the executable machine code (`.text` section) from a com
   - **Safety Check**: Scans for NULL bytes (`0x00`) which can terminate string-based exploits (like `strcpy`).
 - **Usage**: `python3 shellcoder.py <binary_path>`
 
-#### `IPHEXGen.py` — Reverse Shell Generator
+#### `ReverseShellGen.py` — Reverse Shell Generator (IPv4 & IPv6)
 An interactive generator for creating custom Reverse Shell payloads (connect-back).
 - **Functionality**:
   - Takes a user-defined LHOST (IP) and LPORT.
-  - Dynamically constructs the `sockaddr_in` structure in hex.
+  - **Auto-Detection**: Identifies if the IP is IPv4 or IPv6.
+  - **IPv6 Support**: Generates the 28-byte `sockaddr_in6` structure for modern network environments.
   - **Smart Encoding**: If the IP/Port introduces NULL bytes, it automatically applies a mini-XOR obfuscation routine to the mov instructions to ensure the final payload remains NULL-free.
-- **Usage**: Run interactively `python3 IPHEXGen.py`
+- **Usage**: Run interactively `python3 ReverseShellGen.py`
 
-#### `Egghunter-Gen.py` — Buffer Space Stager (New!) - need to test
+#### `IP-ASM-Converter.py` — Manual Assembly Helper
+A simple utility for manual assembly coding.
+- **Problem**: Manually calculating the hex values for IP addresses and ports to push onto the stack (in correct Endianness) is tedious and error-prone.
+- **Solution**: This script takes an IP and Port and prints the exact Assembly instructions (`push 0x...`) needed to embed them in your `.s` file.
+- **Usage**: `python3 IP-ASM-Converter.py <IP> <PORT>`
+
+#### `Egghunter-Gen.py` — Buffer Space Stager (New!)
 A utility to generate an "Egghunter" stub for small buffer exploits.
 - **Concept**: When check buffer is too small for the full payload, you inject a small "Hunter" that scans memory for a specific "Egg" (signature) marking the start of your main payload.
 - **Technique**: Uses `access(2)` syscall to safely scan memory pages without crashing.
@@ -131,7 +138,7 @@ Modern EDRs hook standard library functions like `mmap` and `mprotect`. **Loader
 This makes the system call appear to originate from a legitimate signed library rather than your shellcode's memory segment.
 
 ### 🛠 Quick Start: The "Ghost" Workflow
-1. **Generate** your reverse shell: `python3 IPHEXGen.py`
+1. **Generate** your reverse shell: `python3 ReverseShellGen.py`
 2. **Encapsulate** with MMX: `python3 XOR-MMX.py` (Add the Egg tag `PABAPABA` manually if needed).
 3. **Generate** the hunter: `python3 Egghunter-Gen.py`
 4. **Deploy**: Inject the 35-byte Egghunter into the vulnerable buffer.
@@ -154,7 +161,7 @@ python3 shellcoder.py shell
 
 **Option B: Generate Reverse Shell**
 ```bash
-python3 IPHEXGen.py
+python3 ReverseShellGen.py
 # Enter IP: 127.0.0.1, Port: 4444
 # Copy the output HEX
 ```
