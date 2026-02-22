@@ -1,0 +1,19 @@
+# Ignore compiled object files
+*.o
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore compiled binaries (output of linker or gcc)
+# Assuming you compile 'shell.s' to 'shell' and 'Reverse-shell.s' to 'Reverse-shell'
+shell
+Reverse-shell
+test_exploit
+test_payload
+
+# Ignore generated C files (optional, keeps repo clean)
+test_payload.c
+
+# Ignore text logs
+XOR.txt
