@@ -55,13 +55,19 @@ An interactive generator for creating custom Reverse Shell payloads (connect-bac
   - **Smart Encoding**: If the IP/Port introduces NULL bytes, it automatically applies a mini-XOR obfuscation routine to the mov instructions to ensure the final payload remains NULL-free.
 - **Usage**: Run interactively `python3 ReverseShellGen.py`
 
+#### `Reverse-shell-IPv6.s` — Manual IPv6 Assembly Template (New!) - need to test
+A standalone assembly template for IPv6 reverse shells.
+- **Use Case**: When you need to manually craft or modify IPv6 shellcode without using the generator.
+- **Structure**: Properly handles the larger `sockaddr_in6` structure (28 bytes) by pushing 4 QWORDS onto the stack in reverse order.
+- **Usage**: Edit the IP/Port constants directly in the `.s` file, then compile with `nasm`.
+
 #### `IP-ASM-Converter.py` — Manual Assembly Helper
 A simple utility for manual assembly coding.
 - **Problem**: Manually calculating the hex values for IP addresses and ports to push onto the stack (in correct Endianness) is tedious and error-prone.
 - **Solution**: This script takes an IP and Port and prints the exact Assembly instructions (`push 0x...`) needed to embed them in your `.s` file.
 - **Usage**: `python3 IP-ASM-Converter.py <IP> <PORT>`
 
-#### `Egghunter-Gen.py` — Buffer Space Stager (New!)
+#### `Egghunter-Gen.py` — Buffer Space Stager (New!) - need to test
 A utility to generate an "Egghunter" stub for small buffer exploits.
 - **Concept**: When check buffer is too small for the full payload, you inject a small "Hunter" that scans memory for a specific "Egg" (signature) marking the start of your main payload.
 - **Technique**: Uses `access(2)` syscall to safely scan memory pages without crashing.
